@@ -24,58 +24,74 @@ lastCard = Card("1", "green")
 
 allPlayers = []
 
-# button1 = InlineKeyboardButton(text="button1", callback_data="In_First_button")
-# button2 = InlineKeyboardButton(text="button2", callback_data="In_Second_button")
-# keyboard_inline = InlineKeyboardMarkup().add(button1, button2)
+isStarted = False
 
-@dp.callback_query_handler(text=["In_First_button", "In_Second_button"])
-async def check_button(call: types.CallbackQuery):
-    if call.data == "In_First_button":
-        await call.message.answer("Hi! This is the first inline keyboard button.")
-    if call.data == "In_Second_button":
-        await call.message.answer("Hi! This is the second inline keyboard button.")
-    await call.answer()
+isNew = False
 
 keyboard_reply = ReplyKeyboardMarkup(
-	resize_keyboard=True, one_time_keyboard=True).add("players", "_button2")
+	resize_keyboard=True, one_time_keyboard=True).add("new", "start")
 
 @dp.message_handler(commands=['help'])
 async def help(message: types.Message):
     await message.reply("Hello! how are you?", reply_markup=keyboard_reply)
 
-@dp.message_handler(commands=['new'])
-async def new(message: types.Message):
-    await message.reply("Created a new game! Join with /join and start with /start", reply_markup=keyboard_reply)
-
 @dp.message_handler(commands=['join'])
 async def join(message: types.Message):
+    if isNew is False:
+        await message.reply(f"No game is running at the moment. Create a new game with /new", reply_markup=keyboard_reply)
+        print(f"No game is running at the moment. Create a new game with /new")
+
     aux = []
     for x in allPlayers:
         aux.append(x.username)
 
     if message.from_user.username in aux:
         await message.reply(f"{message.from_user.username} already joined the game", reply_markup=keyboard_reply)
+        print(f"{message.from_user.username} already joined the game")
     else:
         addPlayer(message.from_user.first_name, message.from_user.username)
-        await message.reply(f"{message.from_user.username} joined the game", reply_markup=keyboard_reply)
-    # print(f"numero {allCards[4].number} e cor {allCards[4].color}")
-    # print(f"total de cartas {len(allCards)}") #76?
-
-@dp.message_handler(commands=['start'])
-async def start(message: types.Message):
-    await message.reply("First player", reply_markup=keyboard_reply)
+        await message.reply(f"@{message.from_user.username} joined the game", reply_markup=keyboard_reply)
+        print(f"{message.from_user.username} joined the game")
 
 @dp.message_handler()
 async def check_rp(message: types.Message):
-    if message.text == 'players':
+    global isNew
+    if message.text == 'new':
+        if not isNew:            
+            isNew = True
+            await message.reply("Created a new game! Join with /join and start with /start", reply_markup=keyboard_reply)
+            print("Created a new game! Join with /join and start with /start")
+        else:
+            await message.reply("There is already a game running in this chat. Join with /join", reply_markup=keyboard_reply)
+            print("There is already a game running in this chat. Join with /join")
+    elif message.text == 'start':
+        global isStarted
+        if isNew and not isStarted:
+            isStarted = True
+            await message.reply("First player...(nome do primeiro)", reply_markup=keyboard_reply)
+        elif isStarted:
+            await message.reply("The game has already started", reply_markup=keyboard_reply)
+        elif not isNew:
+            await message.reply(f"Not playing right now. Use /new to start a game")
+
         await message.reply(f"Tem ({len(allPlayers)}) jogando")
-    elif message.text == '_button2':
-        await message.answer(f"Hello, {(message.from_user.first_name)}!")
-        # print(f"{gameCards.number} numero alterado")
+        print(f"Tem ({len(allPlayers)}) jogando")
     else:
-        await message.reply(f"Your message is: {message.text}")
- 
+        await message.reply(f"Not playing right now. Use /new to start a game or /join to join the current game", reply_markup=keyboard_reply)
+ #5904849719 escolher cor
+# @dp.message_handler()
+@dp.message_handler(content_types=types.ContentType.STICKER)
+async def check_st(message: types.Message):
+    await message.reply(f"something not a message", reply_markup=keyboard_reply)
+    await message.reply(f"{message}", reply_markup=keyboard_reply)
+    print(f"sticker: ({message})")
+    
+
 def addPlayer(name, username):
     allPlayers.append(Player(name, username, []))
 
 executor.start_polling(dp)
+
+AgADrg4AAvX2mVE
+
+AgAD6A8AAn_ckVE
